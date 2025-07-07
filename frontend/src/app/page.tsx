@@ -6,8 +6,13 @@ import { Card, CardContent } from "@/components/card";
 import { Feature } from "@/components/feature";
 import {Step} from "@/components/step";
 import { CheckCircle, MessageSquare, Pencil, Upload } from "lucide-react";
+import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
+  const router = useRouter();
+  const gotochatpage = () => {
+    router.push('/demo'); 
+  };
   return (
     <main className="bg-white dark:bg-[#0c0e12] min-h-screen text-gray-900 dark:text-white p-6 space-y-16">
       <header className="flex flex-col items-center space-y-4 text-center">
@@ -18,7 +23,7 @@ export default function HomePage() {
           Generate, audit, and deploy contracts using natural language. No code needed.
         </p>
         <div className="flex gap-4">
-          <Button variant="default">Try the Demo</Button>
+          <Button variant="default" onClick={gotochatpage}>Try the Demo</Button>
           <Button variant="outline">View on GitHub</Button>
         </div>
       </header>
