@@ -1,49 +1,83 @@
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import HumanMessage
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import ChatPromptTemplate
-from dotenv import load_dotenv
+#!/usr/bin/env python3
+
 import os
 import sys
+import subprocess
+import tempfile
+from dotenv import load_dotenv
 
-# Load .env variables
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+
+# Load API Key
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# Initialize LLM
+if not openai_api_key:
+    print("OPENAI_API_KEY not found in .env")
+    sys.exit(1)
+
+# Init LLM
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2, openai_api_key=openai_api_key)
 
-# Memory to track session context
-memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-
-# Friendly prompt template for non-technical users
+# Prompt Template
 contract_prompt = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful assistant who creates smart contracts in Solidity for non-technical users. Always explain the contract in plain language after generating the code."),
     ("human", "I want a {contract_type} contract with features like: {features}. Make it secure and production-ready.")
 ])
 
-# Function to get LLM response
+# Contract Generator
 def generate_contract(contract_type, features):
-    prompt = contract_prompt.format_messages(
-        contract_type=contract_type,
-        features=features
-    )
-    response = llm(prompt)
-    memory.save_context({"input": prompt}, {"output": response.content})
-    return response.content
+    try:
+        messages = contract_prompt.format_messages(
+            contract_type=contract_type,
+            features=features
+        )
+        response = llm(messages)
+        return response.content
+    except Exception as e:
+        return f"Error generating contract: {str(e)}"
 
-# Entry point for CLI
-if __name__ == "__main__":
+# Smart Contract Auditor (using solhint)
+def audit_contract(solidity_code):
+    try:
+        # Save code to temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".sol", mode="w", encoding="utf-8") as temp:
+            temp.write(solidity_code)
+            temp_path = temp.name
+
+        # Run solhint
+        result = subprocess.run(["solhint", temp_path], capture_output=True, text=True)
+
+        # Clean up file
+        os.remove(temp_path)
+
+        if result.returncode == 0:
+            return "Solhint found no major issues in the contract."
+        else:
+            return f"Solhint Audit Report:\n\n{result.stdout}"
+    except Exception as e:
+        return f"Audit failed: {str(e)}"
+
+# Main CLI Entrypoint
+def main():
     if len(sys.argv) != 3:
         print("Usage: python generate_contract.py <ContractType> <Features>")
-        print("Example: python generate_contract.py 'ERC-20' 'burnable, mintable, supply cap 1 million tokens'")
+        print("Example: python generate_contract.py 'ERC-20' 'burnable, mintable, capped at 1M tokens'")
         sys.exit(1)
 
     contract_type = sys.argv[1]
     features = sys.argv[2]
 
-    print("\n🔧 Generating your smart contract, please wait...\n")
+    print("\n Generating your smart contract, please wait...\n")
     contract = generate_contract(contract_type, features)
-
-    print("✅ Contract and Explanation:\n")
+    print(" Contract and Explanation:\n")
     print(contract)
+
+    print("\n Running basic audit using solhint...\n")
+    audit_result = audit_contract(contract)
+    print(audit_result)
+
+if __name__ == "__main__":
+    main()
+
