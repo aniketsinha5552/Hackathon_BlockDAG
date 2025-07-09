@@ -1,24 +1,28 @@
-#!/usr/bin/env python3
-
 import os
 import sys
 import subprocess
 import tempfile
 from dotenv import load_dotenv
 
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from pydantic import SecretStr
 
-# Load API Key
-load_dotenv()
+# Load API Key from backend directory
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
+print("DEBUG: OPENAI_API_KEY =", os.getenv("OPENAI_API_KEY"))
 if not openai_api_key:
     print("OPENAI_API_KEY not found in .env")
     sys.exit(1)
 
 # Init LLM
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2, openai_api_key=openai_api_key)
+llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0.2,
+    api_key=SecretStr(openai_api_key)
+)
 
 # Prompt Template
 contract_prompt = ChatPromptTemplate.from_messages([
