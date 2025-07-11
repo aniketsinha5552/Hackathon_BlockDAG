@@ -19,14 +19,10 @@ class DeployRequest(BaseModel):
     code: str
     network: str = "primordial"  # Default to BlockDAG testnet
 
-def extract_contract_name(solidity_code: str) -> str:
-    """Extract contract name from Solidity code"""
-    # Look for contract definition pattern
-    pattern = r'contract\s+(\w+)\s*{'
-    match = re.search(pattern, solidity_code)
-    if match:
-        return match.group(1)
-    return "GeneratedContract"  # Default fallback
+def extract_contract_name(contract_code: str) -> str:
+    # This regex matches 'contract <Name>' optionally followed by inheritance and then a '{'
+    match = re.search(r'contract\s+([A-Za-z_]\w*)\s*(?:is\s*[A-Za-z_][\w, ]*)?\s*{', contract_code)
+    return match.group(1) if match else "GeneratedContract"
 
 @router.post("/generate")
 async def generate_contract(req: GenerateRequest):

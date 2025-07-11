@@ -5,6 +5,8 @@ import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import Login from "@/components/Login";
 import HomeScreen from "@/components/HomeScreen";
+import React, { useState } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function DemoPage() {
   const { address, isConnected } = useAccount();
@@ -17,8 +19,9 @@ export default function DemoPage() {
     global.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
   }
   return (
-    <main className="min-h-screen bg-[#070E1B]">
+    <div className="p-8">
+      <ThemeToggle />
       {isConnected ? <HomeScreen /> : <Login />}
-    </main>
+    </div>
   );
 }
