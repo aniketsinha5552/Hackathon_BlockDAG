@@ -19,7 +19,7 @@ export default function DemoPage() {
     global.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
   }
   return (
-    <div className="p-8">
+    <div className="p-0">
       <ThemeToggle />
       {isConnected ? <HomeScreen /> : <Login />}
     </div>

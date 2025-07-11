@@ -6,9 +6,9 @@ const Login = () => {
   const { isConnected } = useAccount();
   if (isConnected) return null;
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#070E1B]">
-      <h1 className="text-4xl font-bold text-white mb-4">MetaDag Chatbot</h1>
-      <p className="text-lg text-gray-300 mb-8 max-w-xl text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-[#070E1B] text-gray-900 dark:text-white">
+      <h1 className="text-4xl font-bold mb-4">MetaDAG Chatbot</h1>
+      <p className="text-lg mb-8 max-w-xl text-center">
         Chat with AI to generate and deploy smart contracts on the BlockDAG testnet. Connect your wallet to get started!
       </p>
       <ConnectButton />
