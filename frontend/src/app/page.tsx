@@ -16,7 +16,7 @@ import { Step2 } from "@/components/step2";
       router.push('/demo'); 
     };
     return (
-      <main className="bg-white dark:bg-[#0c0e12] min-h-screen text-gray-900 dark:text-white p-6 space-y-16">
+      <main className="bg-white dark:bg-[#0c0e12] text-gray-900 dark:text-white min-h-screen p-6 space-y-16">
         <ThemeToggle />
         <header className="flex flex-col items-center space-y-4 text-center">
           <h1 className="text-3xl md:text-5xl font-bold">
