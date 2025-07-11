@@ -146,6 +146,7 @@ class ContractDeploymentService:
     def deploy_contract(self, contract_code: str, contract_name: str = "GeneratedContract") -> Dict[str, Any]:
         """Deploy the contract to BlockDAG testnet"""
         original_dir = os.getcwd()  # Initialize at the beginning
+        constructor_args = get_default_constructor_args(contract_code)
         try:
             # Save contract to file
             contract_file = self.save_contract_to_file(contract_code, contract_name)
@@ -159,12 +160,13 @@ class ContractDeploymentService:
             os.chdir(self.hardhat_dir)
             
             # Create deployment script
+            args_str = ", ".join(repr(arg) for arg in (constructor_args or []))
             deploy_script = f"""
 const hre = require("hardhat");
 
 async function main() {{
     const {contract_name} = await hre.ethers.getContractFactory("{contract_name}");
-    const contract = await {contract_name}.deploy();
+    const contract = await {contract_name}.deploy({args_str});
     await contract.waitForDeployment();
     
     const address = await contract.getAddress();
@@ -196,14 +198,13 @@ main()
             with open(script_file, 'w') as f:
                 f.write(deploy_script)
             
-            # Run deployment
             result = subprocess.run(
                 [str(self.npx_path), "hardhat", "run", "scripts/deploy_generated.js", "--network", "primordial"],
                 capture_output=True,
                 text=True,
                 timeout=120
             )
-            
+            print(f"Deployment result: {result.stdout}")
             # Parse the JSON output from the script
             try:
                 # Find the JSON output in the stdout
@@ -261,6 +262,46 @@ main()
 def extract_contract_name(contract_code: str) -> str:
     match = re.search(r'contract\s+(\w+)', contract_code)
     return match.group(1) if match else "GeneratedContract"
+
+def get_default_constructor_args(contract_code: str):
+    """
+    Extracts constructor parameters from Solidity code and returns default values.
+    """
+    # Find the constructor definition
+    match = re.search(r'constructor\s*\(([^)]*)\)', contract_code)
+    if not match:
+        return []  # No constructor or default constructor
+
+    params = match.group(1).strip()
+    if not params:
+        return []
+
+    args = []
+    # Split parameters by comma, handle multiple spaces
+    for param in params.split(','):
+        param = param.strip()
+        if not param:
+            continue
+        # Extract type and name
+        parts = param.split()
+        if len(parts) < 2:
+            continue
+        param_type = parts[0]
+        # Assign default values based on type
+        if 'uint' in param_type or 'int' in param_type:
+            args.append(0)
+        elif 'string' in param_type:
+            args.append("default")
+        elif 'address' in param_type:
+            args.append("0x0000000000000000000000000000000000000000")
+        elif 'bool' in param_type:
+            args.append(False)
+        elif param_type.endswith('[]'):
+            args.append([])
+        else:
+            args.append(None)  # Unknown type, use None
+
+    return args
 
 # Create a global instance
 deployment_service = ContractDeploymentService() 
