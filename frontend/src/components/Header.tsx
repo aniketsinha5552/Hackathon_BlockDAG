@@ -9,7 +9,7 @@ const Header = () => {
 
   return (
     <div className="w-full flex items-center justify-between px-8 py-4 bg-gray-950 border-b border-gray-800">
-      <div className="text-xl font-bold text-white">BlockDAG AI Smart Contract Bot</div>
+      <div className="text-xl font-bold text-white">MetaDag Chatbot</div>
       <div className="flex items-center gap-4">
         {isConnected && (
           <>
