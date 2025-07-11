@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
+import re
 
 class ContractDeploymentService:
     def __init__(self):
@@ -44,6 +45,7 @@ class ContractDeploymentService:
     
     def save_contract_to_file(self, contract_code: str, contract_name: str = "GeneratedContract") -> str:
         """Save the contract code to a temporary file in the Hardhat contracts directory"""
+        contract_name = extract_contract_name(contract_code)
         contract_file = self.hardhat_dir / "contracts" / f"{contract_name}.sol"
         
         # Ensure the contracts directory exists
@@ -255,6 +257,10 @@ main()
         contract_file = self.hardhat_dir / "contracts" / f"{contract_name}.sol"
         if contract_file.exists():
             contract_file.unlink()
+
+def extract_contract_name(contract_code: str) -> str:
+    match = re.search(r'contract\s+(\w+)', contract_code)
+    return match.group(1) if match else "GeneratedContract"
 
 # Create a global instance
 deployment_service = ContractDeploymentService() 
