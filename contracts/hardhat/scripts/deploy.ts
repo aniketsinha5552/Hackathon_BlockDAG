@@ -13,6 +13,9 @@ async function main() {
 
   const address = await greeter.getAddress();
   console.log("Greeter deployed to:", address);
+  const deployTx = greeter.deploymentTransaction();
+  console.log("Transaction hash:", deployTx?.hash ?? "Could not fetch hash");
+
 }
 
 main()
