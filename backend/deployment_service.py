@@ -9,6 +9,8 @@ from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 import re
 
+from AI_service.llm_autofix import llm_autofix_solidity
+
 class ContractDeploymentService:
     def __init__(self):
         self.hardhat_dir = Path(__file__).parent.parent / "contracts" / "hardhat"
@@ -153,8 +155,19 @@ class ContractDeploymentService:
             
             # Compile the contract using the same contract_name
             compile_result = self.compile_contract(contract_name)
+            # If compilation failed, try to autofix with LLM and recompile
             if not compile_result["success"]:
-                return compile_result
+                # Attempt to autofix using LLM
+                fixed_code = llm_autofix_solidity(contract_code, compile_result.get("error", ""))
+                if fixed_code and fixed_code != contract_code:
+                    # Save the fixed contract to file
+                    contract_file = self.save_contract_to_file(fixed_code, contract_name)
+                    # Try to recompile with the fixed code
+                    compile_result = self.compile_contract(contract_name)
+                    if not compile_result["success"]:
+                        return compile_result["error"]
+                    contract_code = fixed_code  # Use the fixed code for deployment
+                
             
             # Change to Hardhat directory
             os.chdir(self.hardhat_dir)
