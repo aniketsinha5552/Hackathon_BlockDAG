@@ -24,7 +24,8 @@
     "viem": "^2.21.40",
     "wagmi": "^2.12.25",
     "@monaco-editor/react": "^4.7.0",
-    "monaco-editor": "^0.52.2"
+    "monaco-editor": "^0.52.2",
+     "lucide-react": "^0.525.0"
   },
   "devDependencies": {
     "@types/node": "^20",
