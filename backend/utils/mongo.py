@@ -7,5 +7,11 @@ def get_mongo_client():
 
 def get_chat_collection():
     client = get_mongo_client()
-    db = client["monaco_chat"]  # or your preferred db name
+    db = client["metadag"]  # or your preferred db name
     return db["chat_history"]
+
+def get_deployment_collection():
+    client = get_mongo_client()
+    db = client["metadag"]  # or your preferred db name
+    return db["deployments"]
+
