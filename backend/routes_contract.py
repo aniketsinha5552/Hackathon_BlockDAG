@@ -15,9 +15,6 @@ router = APIRouter()
 class GenerateRequest(BaseModel):
     prompt: str
 
-class AuditRequest(BaseModel):
-    code: str
-
 class DeployRequest(BaseModel):
     code: str
     network: str = "primordial"  # Default to BlockDAG testnet
@@ -35,11 +32,6 @@ async def generate_contract(req: GenerateRequest):
     contract_type, features = map(str.strip, req.prompt.split('|', 1))
     contract = ai_generate_contract(contract_type, features)
     return {"contract": contract}
-
-@router.post("/audit")
-async def audit_contract(req: AuditRequest):
-    # Placeholder: Return dummy audit result
-    return {"audit": f"Audit result for provided code: OK (placeholder)"}
 
 @router.post("/deploy")
 async def deploy_contract(req: DeployRequest):

@@ -149,6 +149,7 @@ class ContractDeploymentService:
         """Deploy the contract to BlockDAG testnet"""
         original_dir = os.getcwd()  # Initialize at the beginning
         constructor_args = get_default_constructor_args(contract_code)
+        print(f"Constructor args: {constructor_args}")
         try:
             # Save contract to file
             contract_file = self.save_contract_to_file(contract_code, contract_name)
@@ -173,13 +174,18 @@ class ContractDeploymentService:
             os.chdir(self.hardhat_dir)
             
             # Create deployment script
-            args_str = ", ".join(repr(arg) for arg in (constructor_args or []))
+            if constructor_args and len(constructor_args) > 0:
+                args_str = ", ".join(repr(arg) for arg in constructor_args)
+                deploy_call = f"const contract = await {contract_name}.deploy({args_str});"
+            else:
+                deploy_call = f"const contract = await {contract_name}.deploy();"
+            
             deploy_script = f"""
 const hre = require("hardhat");
 
 async function main() {{
     const {contract_name} = await hre.ethers.getContractFactory("{contract_name}");
-    const contract = await {contract_name}.deploy({args_str});
+    {deploy_call}
     await contract.waitForDeployment();
     
     const address = await contract.getAddress();
@@ -305,14 +311,15 @@ def get_default_constructor_args(contract_code: str):
             args.append(0)
         elif 'string' in param_type:
             args.append("default")
-        elif 'address' in param_type:
+        elif 'address' in param_type or 'IERC20' in param_type:
             args.append("0x0000000000000000000000000000000000000000")
         elif 'bool' in param_type:
             args.append(False)
         elif param_type.endswith('[]'):
             args.append([])
         else:
-            args.append(None)  # Unknown type, use None
+            # For unknown types, use a safe default instead of None
+            args.append("0x0000000000000000000000000000000000000000")
 
     return args
 
