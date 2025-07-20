@@ -4,21 +4,20 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle, XCircle, AlertTriangle, Code, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { auditContract, validateContract, solhintAudit, type AuditResponse } from "@/services/auditService";
+import { auditContract, validateContract, solhintAudit } from "@/services/auditService";
 
 interface AuditResult {
     success: boolean;
     originalCode: string;
     correctedCode: string;
-    originalAudit: any;
-    finalAudit: any;
+    originalAudit: Record<string, unknown>;
+    finalAudit: Record<string, unknown>;
     issuesFixed: number;
     remainingIssues: number;
-    validation: any;
+    validation: Record<string, unknown>;
 }
 
 export default function ContractAuditor() {
@@ -47,8 +46,12 @@ export default function ContractAuditor() {
                 validation: result.validation
             });
             toast.success(`Audit completed! Fixed ${result.issues_fixed} issues`);
-        } catch (error: any) {
-            toast.error(error.message || "Audit failed");
+        } catch (error: unknown) {
+            if (error && typeof error === 'object' && 'message' in error) {
+                toast.error((error as { message?: string }).message || "Audit failed");
+            } else {
+                toast.error("Audit failed");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -65,8 +68,12 @@ export default function ContractAuditor() {
             const result = await validateContract(contractCode);
             toast.success("Validation completed");
             console.log("Validation result:", result);
-        } catch (error: any) {
-            toast.error(error.message || "Validation failed");
+        } catch (error: unknown) {
+            if (error && typeof error === 'object' && 'message' in error) {
+                toast.error((error as { message?: string }).message || "Validation failed");
+            } else {
+                toast.error("Validation failed");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -83,8 +90,12 @@ export default function ContractAuditor() {
             const result = await solhintAudit(contractCode);
             toast.success("Solhint audit completed");
             console.log("Solhint result:", result);
-        } catch (error: any) {
-            toast.error(error.message || "Solhint audit failed");
+        } catch (error: unknown) {
+            if (error && typeof error === 'object' && 'message' in error) {
+                toast.error((error as { message?: string }).message || "Solhint audit failed");
+            } else {
+                toast.error("Solhint audit failed");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -104,16 +115,16 @@ export default function ContractAuditor() {
         return checks;
     };
 
-    const getAuditIssues = (audit: any) => {
+    const getAuditIssues = (audit: Record<string, unknown>) => {
         const issues = [];
-        if (audit.errors?.length > 0) {
-            issues.push(...audit.errors.map((error: string) => ({ type: 'error', message: error })));
+        if (Array.isArray(audit.errors) && audit.errors.length > 0) {
+            issues.push(...(audit.errors as string[]).map((error: string) => ({ type: 'error', message: error })));
         }
-        if (audit.warnings?.length > 0) {
-            issues.push(...audit.warnings.map((warning: string) => ({ type: 'warning', message: warning })));
+        if (Array.isArray(audit.warnings) && audit.warnings.length > 0) {
+            issues.push(...(audit.warnings as string[]).map((warning: string) => ({ type: 'warning', message: warning })));
         }
-        if (audit.issues?.length > 0) {
-            issues.push(...audit.issues.map((issue: string) => ({ type: 'info', message: issue })));
+        if (Array.isArray(audit.issues) && audit.issues.length > 0) {
+            issues.push(...(audit.issues as string[]).map((issue: string) => ({ type: 'info', message: issue })));
         }
         return issues;
     };
@@ -206,13 +217,13 @@ contract MyContract {
                                 </div>
                                 <div className="text-center">
                                     <div className="text-2xl font-bold text-blue-600">
-                                        {auditResult.validation.contract_name || "Unknown"}
+                                        {String(auditResult.validation.contract_name ?? "Unknown")}
                                     </div>
                                     <div className="text-sm text-muted-foreground">Contract Name</div>
                                 </div>
                                 <div className="text-center">
                                     <div className="text-2xl font-bold text-purple-600">
-                                        {auditResult.validation.solidity_version || "Unknown"}
+                                        {String(auditResult.validation.solidity_version ?? "Unknown")}
                                     </div>
                                     <div className="text-sm text-muted-foreground">Solidity Version</div>
                                 </div>
@@ -297,9 +308,9 @@ contract MyContract {
                                             </AlertDescription>
                                         </Alert>
                                     ))}
-                                    {getAuditIssues(auditResult.originalAudit).length === 0 && (
+                                    {getAuditIssues(auditResult.originalAudit).length === 0 ? (
                                         <p className="text-muted-foreground">No issues found</p>
-                                    )}
+                                    ) : null}
                                 </div>
                             </CardContent>
                         </Card>
@@ -324,9 +335,9 @@ contract MyContract {
                                             </AlertDescription>
                                         </Alert>
                                     ))}
-                                    {getAuditIssues(auditResult.finalAudit).length === 0 && (
+                                    {getAuditIssues(auditResult.finalAudit).length === 0 ? (
                                         <p className="text-muted-foreground">No issues found</p>
-                                    )}
+                                    ) : null}
                                 </div>
                             </CardContent>
                         </Card>

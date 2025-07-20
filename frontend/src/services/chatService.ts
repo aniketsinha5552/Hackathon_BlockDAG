@@ -2,20 +2,20 @@ import { api } from "../utils/axios";
 
 export async function sendChat(prompt: string) {
     try{
-        let res = await api.post("/generate", {
+        const res = await api.post("/generate", {
             prompt: prompt
-        })
-        let processedData: CodeResponse = separateTextAndCode(res?.data?.contract?? "")
-        return processedData
-    }catch(e: any){
-        console.log(e)
+        });
+        const processedData: CodeResponse = separateTextAndCode(res?.data?.contract ?? "");
+        return processedData;
+    }catch(e: unknown){
+        console.log(e);
     }
 }
 
 
 export interface CodeResponse {
-    text: any;
-    code: any;
+    text: string;
+    code: string;
 }
 
 function separateTextAndCode(aiResponse: string): CodeResponse {
@@ -54,14 +54,14 @@ function separateTextAndCode(aiResponse: string): CodeResponse {
 
   // --- New methods for chat history ---
 
-export async function saveChat(user_id: string, chat_history: any[]) {
+export async function saveChat(user_id: string, chat_history: { sender: string; text: string; code?: string }[]) {
   try {
-      let payload = {
+      const payload = {
           user_id: user_id,
           chat_history: chat_history
       };
       await api.post('/save_chat_history', payload);
-  } catch (e: any) {
+  } catch (e: unknown) {
       console.log(e);
   }
 }
@@ -69,7 +69,7 @@ export async function saveChat(user_id: string, chat_history: any[]) {
 export async function getChat(user_id: string) {
   try {
       return await api.get(`/get_chat_history/${user_id}`);
-  } catch (e: any) {
+  } catch (e: unknown) {
       console.log(e);
   }
 }

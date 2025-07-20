@@ -56,6 +56,21 @@ export interface SolhintResponse {
     };
 }
 
+function isAxiosErrorWithDetail(error: unknown): error is { response: { data: { detail: string } } } {
+    return (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as any).response === 'object' &&
+        (error as any).response !== null &&
+        'data' in (error as any).response &&
+        typeof (error as any).response.data === 'object' &&
+        (error as any).response.data !== null &&
+        'detail' in (error as any).response.data &&
+        typeof (error as any).response.data.detail === 'string'
+    );
+}
+
 export async function auditContract(contractCode: string, description?: string): Promise<AuditResponse> {
     try {
         const response = await api.post("/audit", {
@@ -63,9 +78,12 @@ export async function auditContract(contractCode: string, description?: string):
             description: description || ""
         });
         return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Audit failed:", error);
-        throw new Error(error.response?.data?.detail || "Audit failed");
+        if (isAxiosErrorWithDetail(error)) {
+            throw new Error(error.response.data.detail);
+        }
+        throw new Error("Audit failed");
     }
 }
 
@@ -76,9 +94,12 @@ export async function validateContract(contractCode: string, description?: strin
             description: description || ""
         });
         return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Validation failed:", error);
-        throw new Error(error.response?.data?.detail || "Validation failed");
+        if (isAxiosErrorWithDetail(error)) {
+            throw new Error(error.response.data.detail);
+        }
+        throw new Error("Validation failed");
     }
 }
 
@@ -89,8 +110,11 @@ export async function solhintAudit(contractCode: string, description?: string): 
             description: description || ""
         });
         return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Solhint audit failed:", error);
-        throw new Error(error.response?.data?.detail || "Solhint audit failed");
+        if (isAxiosErrorWithDetail(error)) {
+            throw new Error(error.response.data.detail);
+        }
+        throw new Error("Solhint audit failed");
     }
 } 

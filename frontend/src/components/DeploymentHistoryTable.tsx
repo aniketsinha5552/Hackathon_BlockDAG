@@ -21,7 +21,7 @@ interface Deployment {
   network?: string;
   timestamp?: string;
   explorerUrl?: string;
-  [key: string]: any;
+  // [key: string]: unknown;
 }
 
 interface DeploymentHistoryTableProps {
