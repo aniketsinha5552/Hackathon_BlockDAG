@@ -1,12 +1,11 @@
 'use client'
 import React, { useState, useEffect, useRef } from "react";
-import MonacoEditor from "@monaco-editor/react";
+// import MonacoEditor from "@monaco-editor/react";
 import { CodeResponse, saveChat, sendChat } from "@/services/chatService";
 import { deploySmartContract, IDeployResponse, saveDeployment, getDeployments } from "@/services/deployService";
 import toast, { Toaster } from 'react-hot-toast';
 import { useAccount } from "wagmi";
 import { getChat } from "@/services/chatService";
-import { FaHistory } from "react-icons/fa";
 import DeploymentHistoryTable from "./DeploymentHistoryTable";
 import { Button } from "./ui/button";
 import { useTheme } from "@/context/ThemeContext";
@@ -16,8 +15,10 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogClose,
 } from "./ui/dialog";
+import dynamic from 'next/dynamic';
+
+const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 interface Message {
     sender: "user" | "ai";
@@ -31,7 +32,7 @@ interface Deployment {
     network?: string;
     timestamp?: string;
     explorerUrl?: string;
-    [key: string]: any;
+    // [key: string]: any;
 }
 
 const initialCode = `// SPDX-License-Identifier: MIT
@@ -74,14 +75,19 @@ const ChatWithEditor = () => {
                 const res = await getChat(address);
                 if (res && res.data && res.data.chat_history) {
                     // Convert chat_history to Message[]
-                    const loadedMessages = res.data.chat_history.map((msg: any) => ({
-                        sender: msg.sender,
-                        text: msg.message || msg.text || "",
-                        code: msg.code
-                    }));
+                    const loadedMessages: Message[] = res.data.chat_history.map((msg: unknown) => {
+                        if (typeof msg === 'object' && msg !== null && 'sender' in msg) {
+                            return {
+                                sender: (msg as { sender: string }).sender,
+                                text: (msg as { message?: string; text?: string }).message || (msg as { text?: string }).text || "",
+                                code: (msg as { code?: string }).code
+                            };
+                        }
+                        return { sender: 'ai', text: '', code: '' };
+                    });
                     setMessages(loadedMessages);
                     // Find last AI message with code
-                    const lastAiMsg = [...loadedMessages].reverse().find(m => m.sender === 'ai' && m.code);
+                    const lastAiMsg = [...loadedMessages].reverse().find((m: Message) => m.sender === 'ai' && !!m.code);
                     if (lastAiMsg && lastAiMsg.code) {
                         setCode(lastAiMsg.code);
                     }
@@ -100,29 +106,29 @@ const ChatWithEditor = () => {
             return;
         }
         try {
-            const chatPayload: Message[] = []
-            setIsLoading(true)
+            const chatPayload: Message[] = [];
+            setIsLoading(true);
             if (!input.trim()) return;
-            let userMessage: Message = { sender: "user", text: input }
+            const userMessage: Message = { sender: "user", text: input };
             setMessages([...messages, userMessage]);
-            chatPayload.push(userMessage)
+            chatPayload.push(userMessage);
 
-            let prompt = input
+            const prompt = input;
             setInput("");
-            let aiResponse: CodeResponse | undefined = await sendChat(prompt)
-            if (!aiResponse) return
+            const aiResponse: CodeResponse | undefined = await sendChat(prompt);
+            if (!aiResponse) return;
 
-            let aiMessage: Message = { sender: 'ai', text: aiResponse.text, code: aiResponse.code }
-            setMessages(prev => [...prev, aiMessage])
-            setCode(aiResponse.code)
-            chatPayload.push(aiMessage)
+            const aiMessage: Message = { sender: 'ai', text: aiResponse.text, code: aiResponse.code };
+            setMessages(prev => [...prev, aiMessage]);
+            setCode(aiResponse.code);
+            chatPayload.push(aiMessage);
 
-            await saveChat(address, chatPayload)
+            await saveChat(address, chatPayload);
 
-        } catch (e: any) {
-            console.log(e)
+        } catch (e) {
+            console.log(e);
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
     };
 
@@ -134,15 +140,15 @@ const ChatWithEditor = () => {
         toast.loading('Deployment started...', { id: 'deploy' });
         setIsLoading(true);
         try {
-            let deployResponse: IDeployResponse = await deploySmartContract(code)
-            await saveDeployment(deployResponse, address)
+            const deployResponse: IDeployResponse = await deploySmartContract(code);
+            await saveDeployment(deployResponse, address);
             setDeployInfo(deployResponse);
             setIsModalOpen(true);
             toast.dismiss('deploy');
-        } catch (e: any) {
+        } catch (e) {
             toast.dismiss('deploy');
             toast.error('Deployment failed');
-            console.log(e)
+            console.log(e);
         } finally {
             setIsLoading(false);
         }
@@ -157,7 +163,7 @@ const ChatWithEditor = () => {
             const deployments: IDeployResponse[] = await getDeployments(address);
             setDeployments(deployments);
             setIsHistoryModalOpen(true);
-        } catch (e) {
+        } catch {
             toast.error("Failed to fetch deployment history");
             setDeployments([]);
             setIsHistoryModalOpen(true);
@@ -189,8 +195,14 @@ const ChatWithEditor = () => {
                                     <span className="font-semibold">Explorer URL:</span> <a href={deployInfo.explorerUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all">{deployInfo.explorerUrl}</a>
                                 </div>
                             )}
-                            {('transactionHash' in deployInfo && (deployInfo as any).transactionHash !== undefined && (deployInfo as any).transactionHash !== 'N/A') && (
-                                <div><span className="font-semibold">Transaction Hash:</span> {(deployInfo as any).transactionHash}</div>
+                            {(
+                                typeof deployInfo === 'object' &&
+                                deployInfo !== null &&
+                                'transactionHash' in deployInfo &&
+                                (deployInfo as { transactionHash?: unknown }).transactionHash !== undefined &&
+                                (deployInfo as { transactionHash?: unknown }).transactionHash !== 'N/A'
+                            ) && (
+                                <div><span className="font-semibold">Transaction Hash:</span> {String((deployInfo as { transactionHash?: unknown }).transactionHash)}</div>
                             )}
                         </div>
                     </DialogContent>
@@ -264,7 +276,7 @@ const ChatWithEditor = () => {
                             height="100%"
                             defaultLanguage="solidity"
                             value={code}
-                            onChange={(value: any) => setCode(value || "")}
+                            onChange={(value) => setCode(value || "")}
                             theme={theme === 'dark' ? 'vs-dark' : 'light'}
                             options={{ fontSize: 14, minimap: { enabled: false } }}
                         />

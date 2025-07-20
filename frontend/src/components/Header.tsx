@@ -1,6 +1,5 @@
 'use client'
 import React from 'react';
-import ConnectButton from '@/components/ConnectButton';
 import { useAccount, useDisconnect } from 'wagmi';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from './ui/button';
