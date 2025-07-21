@@ -19,6 +19,7 @@ import { Step2 } from "@/components/step2";
       <main className="bg-white dark:bg-[#0c0e12] text-gray-900 dark:text-white min-h-screen p-6 space-y-16">
         <ThemeToggle />
         <header className="flex flex-col items-center space-y-4 text-center">
+          <img src="/metadag_icon.png" alt="MetaDAG" className="w-20 h-20 mb-4" />
           <h1 className="text-3xl md:text-5xl font-bold">
             Build & Deploy Smart Contracts with AI —<br /> Powered by BlockDAG
           </h1>
