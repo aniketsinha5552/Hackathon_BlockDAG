@@ -214,96 +214,167 @@ const ChatWithEditor = () => {
                 open={isHistoryModalOpen}
                 onOpenChange={setIsHistoryModalOpen}
             />
-            <div className="flex flex-col md:flex-row w-full h-[80vh] rounded-lg shadow-lg overflow-hidden bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white">
+            {/* Background decorative elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 dark:bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
+                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 dark:bg-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse delay-1000"></div>
+                <div className="absolute top-40 left-1/2 w-80 h-80 bg-indigo-300 dark:bg-indigo-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse delay-500"></div>
+            </div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row w-full h-[85vh] rounded-2xl shadow-2xl overflow-hidden bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg border border-white/20 dark:border-gray-700/20">
                 {/* Chat Section */}
-                <div className="flex flex-col w-full md:w-1/2 h-full p-4 border-r border-neutral-400 dark:border-neutral-900">
-                    <div className="flex-1 overflow-y-auto mb-4 space-y-2">
+                <div className="flex flex-col w-full md:w-1/2 h-full">
+                    {/* Chat Header */}
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 text-white">
+                        <h2 className="text-lg font-bold flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                            AI Assistant
+                        </h2>
+                        <p className="text-blue-100 text-xs mt-1">Describe your smart contract and I'll generate it for you</p>
+                    </div>
+                    
+                    {/* Messages Area */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+                        {messages.length === 0 && (
+                            <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
+                                <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                </div>
+                                <p className="text-lg font-medium mb-2">Start a conversation</p>
+                                <p className="text-sm">Ask me to create any type of smart contract</p>
+                            </div>
+                        )}
                         {messages.map((msg, idx) => (
                             <div
                                 key={idx}
-                                className={`p-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
                             >
-                                <div
-                                    className={`p-2 rounded-lg max-w-[80%] 
-                                    ${msg.sender === "user"
-                                        ? (theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-blue-400 text-black')
-                                        : (theme === 'dark' ? 'bg-gray-700 text-gray-100' : 'bg-gray-300 text-black')
-                                    }
-                                `}
-                                >
-                                    {msg.text}
+                                <div className={`flex items-start gap-3 max-w-[85%] ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                                    {/* Avatar */}
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${
+                                        msg.sender === "user" 
+                                            ? "bg-gradient-to-r from-blue-500 to-blue-600" 
+                                            : "bg-gradient-to-r from-purple-500 to-purple-600"
+                                    }`}>
+                                        {msg.sender === "user" ? "U" : "AI"}
+                                    </div>
+                                    
+                                    {/* Message Bubble */}
+                                    <div
+                                        className={`px-4 py-3 rounded-2xl shadow-sm ${
+                                            msg.sender === "user"
+                                                ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md"
+                                                : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-bl-md"
+                                        }`}
+                                    >
+                                        <p className="text-sm leading-relaxed">{msg.text}</p>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                         <div ref={chatEndRef} />
                     </div>
-                    <div className="flex gap-2">
-                        <Input
-                            className={`flex-1 p-2 rounded border focus:outline-none
-                                ${theme === 'dark'
-                                    ? 'bg-gray-800 text-white border-gray-700 placeholder-gray-400'
-                                    : 'bg-white text-black border-gray-300 placeholder-gray-500'}
-                            `}
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
-                            placeholder="e.g. ERC-20|burnable, mintable, capped at 1M tokens"
-                            onKeyDown={e => e.key === 'Enter' && handleSend()}
-                        />
-                        <Button
-                            className={`px-4 py-2 rounded flex items-center justify-center min-w-[64px] 
-                                ${theme === 'dark'
-                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                    : 'bg-blue-400 text-black hover:bg-blue-500'}
-                            `}
-                            onClick={handleSend}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                                </svg>
-                            ) : (
-                                'Send'
-                            )}
-                        </Button>
+                    
+                    {/* Input Area */}
+                    <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex gap-3">
+                            <Input
+                                className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 bg-gray-50 dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                                placeholder="e.g. Create an ERC-20 token with minting and burning capabilities"
+                                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                            />
+                            <Button
+                                className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={handleSend}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </div>
+                
                 {/* Code Editor Section */}
-                <div className="w-full md:w-1/2 h-full flex flex-col">
-                    <div className="flex-1">
+                <div className="w-full md:w-1/2 h-full flex flex-col border-l border-gray-200 dark:border-gray-700">
+                    {/* Editor Header */}
+                    <div className="bg-gradient-to-r from-gray-700 to-gray-800 p-3 text-white">
+                        <h2 className="text-lg font-bold flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                            Smart Contract Editor
+                        </h2>
+                        <p className="text-gray-300 text-xs mt-1">Edit and deploy your Solidity contract</p>
+                    </div>
+                    
+                    {/* Monaco Editor */}
+                    <div className="flex-1 relative">
                         <MonacoEditor
                             height="100%"
                             defaultLanguage="solidity"
                             value={code}
                             onChange={(value) => setCode(value || "")}
                             theme={theme === 'dark' ? 'vs-dark' : 'light'}
-                            options={{ fontSize: 14, minimap: { enabled: false } }}
+                            options={{ 
+                                fontSize: 14, 
+                                minimap: { enabled: false },
+                                padding: { top: 16, bottom: 16 },
+                                lineNumbers: 'on',
+                                roundedSelection: false,
+                                scrollBeyondLastLine: false,
+                                automaticLayout: true
+                            }}
                         />
                     </div>
-                    <div className="p-4 flex justify-end gap-2">
-                        <Button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                            Compile
-                        </Button>
-                        <Button onClick={handleDeploy} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center justify-center min-w-[64px]" disabled={isLoading}>
-                            {isLoading ? (
-                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    
+                    {/* Action Buttons */}
+                    <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-end gap-3">
+                            <Button className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg">
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                                 </svg>
-                            ) : (
-                                'Deploy'
-                            )}
-                        </Button>
-                        <Button
-                            onClick={handleOpenHistory}
-                            className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center justify-center"
-                            title="View Deployment History"
-                        >
-                            History
-                            {/* <FaHistory className="mr-2" /> */}
-                            {/* <span className="hidden md:inline">History</span> */}
-                        </Button>
+                                Compile
+                            </Button>
+                            <Button 
+                                onClick={handleDeploy} 
+                                className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" 
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                ) : (
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                )}
+                                Deploy
+                            </Button>
+                            <Button
+                                onClick={handleOpenHistory}
+                                className="px-4 py-2 rounded-lg bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                                title="View Deployment History"
+                            >
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                History
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

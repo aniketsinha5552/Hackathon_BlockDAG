@@ -9,6 +9,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "MetaDAG Chatbot",
   description: "Build & Deploy Smart Contracts with AI on BlockDAG",
+  icons: {
+    icon: "/metadag_icon.png",
+    shortcut: "/metadag_icon.png",
+    apple: "/metadag_icon.png",
+  },
 };
 
 export default function RootLayout({
