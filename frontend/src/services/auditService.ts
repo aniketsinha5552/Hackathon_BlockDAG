@@ -31,6 +31,13 @@ export interface AuditResponse {
         solidity_version: string | null;
         contract_name: string | null;
     };
+    improvements: {
+        security_improvements: string[];
+        functionality_improvements: string[];
+        best_practice_improvements: string[];
+        structural_improvements: string[];
+        total_improvements: number;
+    };
     error?: string;
 }
 

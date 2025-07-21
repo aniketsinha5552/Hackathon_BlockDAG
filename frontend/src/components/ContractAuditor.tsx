@@ -9,6 +9,14 @@ import { Loader2, CheckCircle, XCircle, AlertTriangle, Code, FileText } from "lu
 import { toast } from "sonner";
 import { auditContract, validateContract, solhintAudit } from "@/services/auditService";
 
+interface Improvements {
+    security_improvements: string[];
+    functionality_improvements: string[];
+    best_practice_improvements: string[];
+    structural_improvements: string[];
+    total_improvements: number;
+}
+
 interface AuditResult {
     success: boolean;
     originalCode: string;
@@ -18,6 +26,7 @@ interface AuditResult {
     issuesFixed: number;
     remainingIssues: number;
     validation: Record<string, unknown>;
+    improvements: Improvements;
 }
 
 export default function ContractAuditor() {
@@ -43,7 +52,14 @@ export default function ContractAuditor() {
                 finalAudit: result.final_audit,
                 issuesFixed: result.issues_fixed,
                 remainingIssues: result.remaining_issues,
-                validation: result.validation
+                validation: result.validation,
+                improvements: result.improvements || {
+                    security_improvements: [],
+                    functionality_improvements: [],
+                    best_practice_improvements: [],
+                    structural_improvements: [],
+                    total_improvements: 0
+                }
             });
             toast.success(`Audit completed! Fixed ${result.issues_fixed} issues`);
         } catch (error: unknown) {
@@ -286,64 +302,110 @@ contract MyContract {
                         </CardContent>
                     </Card>
 
-                    {/* Audit Issues */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Original Audit */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <AlertTriangle className="h-5 w-5 text-orange-600" />
-                                    Original Audit Issues
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-2">
-                                    {getAuditIssues(auditResult.originalAudit).map((issue, index) => (
-                                        <Alert key={index}>
-                                            <AlertDescription className="flex items-start gap-2">
-                                                {issue.type === 'error' && <XCircle className="h-4 w-4 text-red-600 mt-0.5" />}
-                                                {issue.type === 'warning' && <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5" />}
-                                                {issue.type === 'info' && <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />}
-                                                <span>{issue.message}</span>
-                                            </AlertDescription>
-                                        </Alert>
-                                    ))}
-                                    {getAuditIssues(auditResult.originalAudit).length === 0 ? (
-                                        <p className="text-muted-foreground">No issues found</p>
-                                    ) : null}
+                    {/* Improvements */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                                Contract Improvements
+                            </CardTitle>
+                            <CardDescription>
+                                Summary of improvements made to your contract
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-6">
+                                {/* Total Improvements */}
+                                <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                                    <div className="text-3xl font-bold text-green-600">
+                                        {auditResult.improvements.total_improvements}
+                                    </div>
+                                    <div className="text-sm text-green-700 font-medium">Total Improvements Made</div>
                                 </div>
-                            </CardContent>
-                        </Card>
 
-                        {/* Final Audit */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <CheckCircle className="h-5 w-5 text-green-600" />
-                                    Final Audit Issues
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-2">
-                                    {getAuditIssues(auditResult.finalAudit).map((issue, index) => (
-                                        <Alert key={index}>
-                                            <AlertDescription className="flex items-start gap-2">
-                                                {issue.type === 'error' && <XCircle className="h-4 w-4 text-red-600 mt-0.5" />}
-                                                {issue.type === 'warning' && <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5" />}
-                                                {issue.type === 'info' && <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />}
-                                                <span>{issue.message}</span>
-                                            </AlertDescription>
-                                        </Alert>
-                                    ))}
-                                    {getAuditIssues(auditResult.finalAudit).length === 0 ? (
-                                        <p className="text-muted-foreground">No issues found</p>
-                                    ) : null}
+                                {/* Improvement Categories */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Security Improvements */}
+                                    <div className="space-y-2">
+                                        <h4 className="font-semibold text-red-600 flex items-center gap-2">
+                                            <AlertTriangle className="h-4 w-4" />
+                                            Security ({auditResult.improvements.security_improvements.length})
+                                        </h4>
+                                        <div className="space-y-1">
+                                            {auditResult.improvements.security_improvements.length > 0 ? (
+                                                auditResult.improvements.security_improvements.map((improvement, index) => (
+                                                    <div key={index} className="text-sm p-2 bg-red-100 text-red-800 rounded border-l-4 border-red-400">
+                                                        {improvement}
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-sm text-muted-foreground italic">No security improvements needed</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Functionality Improvements */}
+                                    <div className="space-y-2">
+                                        <h4 className="font-semibold text-blue-600 flex items-center gap-2">
+                                            <Code className="h-4 w-4" />
+                                            Functionality ({auditResult.improvements.functionality_improvements.length})
+                                        </h4>
+                                        <div className="space-y-1">
+                                            {auditResult.improvements.functionality_improvements.length > 0 ? (
+                                                auditResult.improvements.functionality_improvements.map((improvement, index) => (
+                                                    <div key={index} className="text-sm p-2 bg-blue-100 text-blue-800 rounded border-l-4 border-blue-400">
+                                                        {improvement}
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-sm text-muted-foreground italic">No functionality improvements needed</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Best Practice Improvements */}
+                                    <div className="space-y-2">
+                                        <h4 className="font-semibold text-yellow-600 flex items-center gap-2">
+                                            <CheckCircle className="h-4 w-4" />
+                                            Best Practices ({auditResult.improvements.best_practice_improvements.length})
+                                        </h4>
+                                        <div className="space-y-1">
+                                            {auditResult.improvements.best_practice_improvements.length > 0 ? (
+                                                auditResult.improvements.best_practice_improvements.map((improvement, index) => (
+                                                    <div key={index} className="text-sm p-2 bg-yellow-100 text-yellow-800 rounded border-l-4 border-yellow-400">
+                                                        {improvement}
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-sm text-muted-foreground italic">No best practice improvements needed</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Structural Improvements */}
+                                    <div className="space-y-2">
+                                        <h4 className="font-semibold text-purple-600 flex items-center gap-2">
+                                            <FileText className="h-4 w-4" />
+                                            Structure ({auditResult.improvements.structural_improvements.length})
+                                        </h4>
+                                        <div className="space-y-1">
+                                            {auditResult.improvements.structural_improvements.length > 0 ? (
+                                                auditResult.improvements.structural_improvements.map((improvement, index) => (
+                                                    <div key={index} className="text-sm p-2 bg-purple-100 text-purple-800 rounded border-l-4 border-purple-400">
+                                                        {improvement}
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-sm text-muted-foreground italic">No structural improvements needed</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             )}
         </div>
     );
-} 
+}
